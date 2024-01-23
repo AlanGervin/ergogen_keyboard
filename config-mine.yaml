@@ -1,0 +1,150 @@
+units:
+  # Proxy Spacing Variables
+  kx: cx
+  ky: cy
+  # Padding Variables
+  px: kx + 2
+  py: ky + 2
+points:
+  zones:
+    matrix:
+      key:
+        padding: cy
+        tags: 
+          1u: true
+        footprints:
+            choc_hotswap:
+              type: choc
+              nets:
+                from: =column_net
+                to: GND
+              params:
+                  keycaps: true
+                  reverse: true
+                  hotswap: true
+            choc:
+              type: choc
+              anchor:
+                rotate: 180
+              nets:
+                from: =column_net
+                to: GND
+              params:
+                  keycaps: true
+                  reverse: true
+      columns:
+        pinky:
+        ring:
+        middle:
+        index:
+        inner:
+      rows:
+        lower:
+        home:
+        upper:
+    thumbfan:
+      key:
+        padding: 1ky
+        spread: 1kx
+      anchor:
+        ref: matrix_inner_lower
+        shift: [-u+4, -u-2]
+      columns:
+        shift:
+          key.splay: -15
+        layerUp:
+          key:
+            width: 1kx
+            shift: [1, 0]
+        enter:
+          key:
+            height: 1.5ky
+            shift: [6, 0]
+            splay: -15
+      rows:
+        cluster:
+  mirror: &mirror
+    ref: matrix_inner_lower
+    distance: 5ky
+outlines:
+  raw:
+    - what: rectangle
+      where: true
+      size: [px, py]
+  keys:
+    - what: rectangle
+      where: true
+      size: [kx-0.5,ky-0.5]
+  board:
+    - what: polygon
+      operation: stack
+      points:
+        - ref: matrix_pinky_upper
+          shift: [-0.5px, 0.5py]
+        - ref: matrix_pinky_lower
+          shift: [-0.5px, -0.6py]
+        - ref: thumbfan_enter_cluster
+          shift: [1py, -0.6px]
+        - ref: thumbfan_enter_cluster
+          shift: [0.7py, 0.9px]
+        - ref: matrix_inner_upper
+          shift: [0.5px, 0.5py]
+  combo:
+    - name: board
+    - operation: subtract
+      name: keys
+pcbs:
+  tutorial:
+    outlines:
+      main:
+        outline: board
+    footprints:
+      # Hotswap Choc keys.
+      choc_hotswap:
+        what: choc
+        where: true
+        params:
+          keycaps: true
+          reverse: false
+          hotswap: true
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      # Through Hole or SMD Diodes
+      diode:
+        what: diode
+        where: true
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [0, -5]
+      # Face Down Arduino Pro Micro
+      promicro:
+        what: promicro
+        params:
+          orientation: "down"
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [0,0]
+          rotate: -90
+      # OLED Screen
+      oled:
+        what: oled
+        params:
+          side: "F"
+          SDA: P2
+          SCL: P3
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [-6,-19]
+          rotate: 90
+      # Four Pin Reset Button
+      reset:
+        what: button
+        params:
+          from: GND
+          to: RST
+        where:
+          ref.aggregate.parts: [matrix_index_upper, mirror_matrix_index_upper]
+          shift: [0, -1]
+          rotate: -90
