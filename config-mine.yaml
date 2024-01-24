@@ -5,33 +5,35 @@ units:
   # Padding Variables
   px: kx + 2
   py: ky + 2
+
 points:
+  key:
+    padding: cy
+    tags: 
+      1u: true
+    footprints:
+        choc_hotswap:
+          type: choc
+          nets:
+            from: =column_net
+            to: GND
+          params:
+              keycaps: true
+              reverse: true
+              hotswap: true
+    footprints:
+        choc:
+          type: choc
+          anchor:
+            rotate: 180
+          nets:
+            from: =column_net
+            to: GND
+          params:
+              keycaps: true
+              reverse: true
   zones:
     matrix:
-      key:
-        padding: cy
-        tags: 
-          1u: true
-        footprints:
-            choc_hotswap:
-              type: choc
-              nets:
-                from: =column_net
-                to: GND
-              params:
-                  keycaps: true
-                  reverse: true
-                  hotswap: true
-            choc:
-              type: choc
-              anchor:
-                rotate: 180
-              nets:
-                from: =column_net
-                to: GND
-              params:
-                  keycaps: true
-                  reverse: true
       columns:
         pinky:
         ring:
@@ -49,6 +51,8 @@ points:
       anchor:
         ref: matrix_inner_lower
         shift: [-u+4, -u-2]
+      rows:
+          cluster:
       columns:
         shift:
           key.splay: -15
@@ -61,43 +65,57 @@ points:
             height: 1.5ky
             shift: [6, 0]
             splay: -15
-      rows:
-        cluster:
   mirror: &mirror
     ref: matrix_inner_lower
     distance: 5ky
+
 outlines:
-  raw:
-    - what: rectangle
-      where: true
-      size: [px, py]
-  keys:
-    - what: rectangle
-      where: true
-      size: [kx-0.5,ky-0.5]
-  board:
-    - what: polygon
-      operation: stack
-      points:
-        - ref: matrix_pinky_upper
-          shift: [-0.5px, 0.5py]
-        - ref: matrix_pinky_lower
-          shift: [-0.5px, -0.6py]
-        - ref: thumbfan_enter_cluster
-          shift: [1py, -0.6px]
-        - ref: thumbfan_enter_cluster
-          shift: [0.7py, 0.9px]
-        - ref: matrix_inner_upper
-          shift: [0.5px, 0.5py]
-  combo:
-    - name: board
-    - operation: subtract
-      name: keys
+    keys:
+      - what: rectangle
+        where: true
+        size: [cx-0.5,cy-0.5]
+    boardA:
+      - what: polygon
+        operation: stack
+        points:
+          - ref: matrix_pinky_upper
+            shift: [-0.5px, 0.5py]
+          - ref: matrix_pinky_lower
+            shift: [-0.5px, -0.6py]
+          - ref: thumbfan_enter_cluster
+            shift: [0.6py, -0.7px]
+          - ref: thumbfan_enter_cluster
+            shift: [0.6py, 0.5px]
+          - ref: matrix_inner_upper
+            shift: [2px, 0.5py]
+    boardB:
+      - what: polygon
+        operation: stack
+        points:
+          - ref: mirror_matrix_pinky_upper
+            shift: [-0.5px, 0.5py]
+          - ref: mirror_matrix_pinky_lower
+            shift: [-0.5px, -0.6py]
+          - ref: mirror_thumbfan_enter_cluster
+            shift: [0.6py, -0.7px]
+          - ref: mirror_thumbfan_enter_cluster
+            shift: [0.6py, 0.5px]
+          - ref: mirror_matrix_inner_upper
+            shift: [2px, 0.5py]
+    combo:
+      - name: boardA
+      - operation: subtract
+        name: keys
+      - name: boardB
+      - operation: subtract
+        name: keys
+
 pcbs:
-  tutorial:
+  boardA:
     outlines:
       main:
-        outline: board
+        outline: boardA
+      
     footprints:
       # Hotswap Choc keys.
       choc_hotswap:
@@ -105,7 +123,7 @@ pcbs:
         where: true
         params:
           keycaps: true
-          reverse: false
+          reverse: true
           hotswap: true
           from: "{{column_net}}"
           to: "{{colrow}}"
@@ -125,7 +143,7 @@ pcbs:
           orientation: "down"
         where:
           ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
-          shift: [0,0]
+          shift: [-1u,-1u]
           rotate: -90
       # OLED Screen
       oled:
@@ -146,5 +164,77 @@ pcbs:
           to: RST
         where:
           ref.aggregate.parts: [matrix_index_upper, mirror_matrix_index_upper]
-          shift: [0, -1]
+          shift: [-1u, -2u]
+          rotate: -90
+      # Face Down Arduino Pro Micro
+      promicro2:
+        what: promicro
+        params:
+          orientation: "down"
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [1u,-1u]
+          rotate: -90
+  boardB:
+    outlines:
+      boardB:
+        outline: boardB
+    footprints:
+      # Hotswap Choc keys.
+      choc_hotswap:
+        what: choc
+        where: true
+        params:
+          keycaps: true
+          reverse: true
+          hotswap: true
+          from: "{{column_net}}"
+          to: "{{colrow}}"
+      # Through Hole or SMD Diodes
+      diode:
+        what: diode
+        where: true
+        params:
+          from: "{{colrow}}"
+          to: "{{row_net}}"
+        adjust:
+          shift: [0, -5]
+      # Face Down Arduino Pro Micro
+      promicro:
+        what: promicro
+        params:
+          orientation: "down"
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [-1u,-1u]
+          rotate: -90
+      # OLED Screen
+      oled:
+        what: oled
+        params:
+          side: "F"
+          SDA: P2
+          SCL: P3
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [-6,-19]
+          rotate: 90
+      # Four Pin Reset Button
+      reset:
+        what: button
+        params:
+          from: GND
+          to: RST
+        where:
+          ref.aggregate.parts: [matrix_index_upper, mirror_matrix_index_upper]
+          shift: [-1u, -2u]
+          rotate: -90
+      # Face Down Arduino Pro Micro
+      promicro2:
+        what: promicro
+        params:
+          orientation: "down"
+        where:
+          ref.aggregate.parts: [matrix_inner_upper, mirror_matrix_inner_upper]
+          shift: [1u,-1u]
           rotate: -90
